@@ -9,7 +9,7 @@ from demo.templates import template_role, template_action_queries, user_data_exa
     template_sum_and_extract, template_report
 
 
-def generate_search_queries(llm, query: str) -> str:
+def generate_search_queries(llm, query: str) -> List[str]:
     prompt = ChatPromptTemplate.from_messages([
         ("system", template_role),
         ("system", template_action_queries),
@@ -24,7 +24,7 @@ def generate_search_queries(llm, query: str) -> str:
     for q in response.content.strip().split(';'):
         queries.append(q.strip() + ' в зале')
 
-    return response.content
+    return queries
 
 
 def search(queries: List[str], max_results_each_q=5) -> Set[Tuple[str, str]]:
@@ -43,7 +43,7 @@ def search(queries: List[str], max_results_each_q=5) -> Set[Tuple[str, str]]:
     return urls
 
 
-def load_documents(urls) -> List[str]:
+def load_documents(urls) -> List[Tuple[str, str, int, str]]:
     docs = []
     for title, href in urls:
         doc = ['#' + title]
@@ -63,6 +63,8 @@ def load_documents(urls) -> List[str]:
                     doc.append('*' + el['text'])
                 elif el['type'] == 'Title':
                     doc.append('##' + el['text'])
+            if len(doc) == 0:
+                continue
             text = '\n'.join(doc)
             docs.append((title, href, len(text), text))
     return docs
@@ -101,16 +103,21 @@ def dump_trainings(trainings) -> List[str]:
     for t in trainings:
         desc = ''
         t = t.model_dump()
+        if t['exercises'] is None or len(t['exercises']) == 0:
+            continue
+
         if t['title']: desc += '##' + t['title'] + '\n'
         if t['description']: desc += 'Комментарий: ' + t['description'] + '\n'
-        if t['exercises']:
-            desc += 'Упражнения:\n'
-            for e in t['exercises']:
-                #e = e.model_dump()
-                desc += ' - "' + e['name'] + '"'
-                if e['muscles']: desc += ': ' + ', '.join(e['muscles']) + '; '
-                if e['comments']: desc += '; ' + e['comments']
-                desc += '\n'
+
+        desc += 'Упражнения:\n'
+        for e in t['exercises']:
+            desc += ' - "' + e['name'] + '"'
+            if e['muscles']:
+                desc += ': ' + ', '.join(e['muscles']) + '; '
+            if e['comments']:
+                desc += '; ' + e['comments']
+            desc += '\n'
+
         descs.append(desc)
 
     return descs
