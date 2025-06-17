@@ -8,5 +8,8 @@ class Translater:
         self.translate_pipe_en_to_ru = pipeline("translation", model="Helsinki-NLP/opus-mt-en-ru")
         logger.success("Models loaded!")
 
-    from_ru_to_en = lambda self, text: self.translate_pipe_ru_to_en(text)[0]["translation"]
-    from_en_to_ru = lambda self, text: self.translate_pipe_en_to_ru(text)[0]["translation"]
+    def from_ru_to_en(self, text):
+        return self.translate_pipe_ru_to_en(text)[0]["translation_text"]
+
+    def from_en_to_ru(self, text):
+        return self.translate_pipe_en_to_ru(text)[0]["translation_text"]
