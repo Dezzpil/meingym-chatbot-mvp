@@ -11,18 +11,18 @@ class ApiClient:
     def __init__(self, base_url: str = "http://localhost:3004"):
         self.base_url = base_url
 
-    def create_training_from_llm(self, user_id: str, result: Result):
+    def create_training_from_llm(self, user_id: str, result: Result, muscles: List[str] = []):
         r = result.model_dump()
         return self.create_training(
             user_id=user_id,
-            muscle_group=r["muscles"],
+            muscle_group=muscles,
             exercises=r["exercises"],
             comments=r["comments"]
         )
 
     def create_training(self, 
                          user_id: str, 
-                         muscle_group: str, 
+                         muscle_group: List[str],
                          exercises: List[str], 
                          comments: Optional[str] = None) -> Dict[str, Any]:
         """
